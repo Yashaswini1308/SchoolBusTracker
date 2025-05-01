@@ -1,18 +1,16 @@
 
- 
-var adminList, studentList, senderId;
-var admins = [], students = [];
-var recipientId, recipientRole;
 
+const driverList = document.getElementById('driverList');
+const adminList = document.getElementById('adminList');
+var senderId = localStorage.getItem('email');
+var drivers = [], admins = [];
+var recipientId, recipientRole;
+var routeId;
 
 document.addEventListener('DOMContentLoaded', async () => {
-
-    adminList = document.getElementById('adminList');
-    studentList = document.getElementById('studentList');
-    senderId = localStorage.getItem('email');
-
+    await fetchStudentRouteId(senderId)
+    if(routeId) await fetchDriver(routeId);
     await fetchAdmins();
-    await fetchStudents();
 
 });
 
@@ -31,18 +29,19 @@ socket.on("receiveMessage", ({ from, message }) => {
     } else {
         notify(from);
     }
-    const role = students.some(student => student.username === from) ? 'student' : 'admin';
+    const role = drivers.some(driver => driver.username === from) ? 'driver' : 'admin';
     moveChatToTop(from, role);
 });
 
 function moveChatToTop(userId, role) {
-    const listElement = role === 'student' ? studentList : adminList;
+    const listElement = role === 'driver' ? driverList : adminList;
     const chatItem = document.getElementById(userId);
     if (chatItem && listElement.firstChild !== chatItem) {
       listElement.removeChild(chatItem);
       listElement.insertBefore(chatItem, listElement.firstChild);
     }
 }
+
 
 function fetchMessages(senderId, recipientId) {
     socket.emit("fetchMessages", { senderId, recipientId }, (messages) => {
@@ -91,25 +90,40 @@ function closeChat() {
 }
 
 
-function displayAdmin(){
-    adminList.style.display = "Block";
-    studentList.style.display = "None";
+function displayDriver(){
+    driverList.style.display = "Block";
+    adminList.style.display = "None";
 
-    document.querySelector(".select-admin").classList.add("active-select");
-    document.querySelector(".select-student").classList.remove("active-select");
+    document.querySelector(".select-driver").classList.add("active-select");
+    document.querySelector(".select-admin").classList.remove("active-select");
 }
 
-function displayStudent(){
-    adminList.style.display = "None";
-    studentList.style.display = "Block";
+function displayAdmin(){
+    driverList.style.display = "None";
+    adminList.style.display = "Block";
 
-    document.querySelector(".select-student").classList.add("active-select");
-    document.querySelector(".select-admin").classList.remove("active-select");
+    document.querySelector(".select-admin").classList.add("active-select");
+    document.querySelector(".select-driver").classList.remove("active-select");
+}
+
+async function fetchDrivers() {
+    try {
+        const response = await fetch('/student/drivers');
+        if (response.ok) {
+            let result = await response.json();
+            drivers = result.drivers;
+            renderDrivers();
+        } else {
+            console.error('Failed to fetch drivers.');
+        }
+    } catch (error) {
+        console.error('Error fetching drivers:', error);
+    }
 }
 
 async function fetchAdmins() {
     try {
-        const response = await fetch('/driver/admins');
+        const response = await fetch('/student/admins');
         if (response.ok) {
             let result = await response.json();
             admins = result.admins;
@@ -122,25 +136,71 @@ async function fetchAdmins() {
     }
 }
 
-async function fetchStudents() {
+async function fetchDriver(routeId) {
     try {
-        const response = await fetch('/driver/students');
+        const response = await fetch(`/student/assigned-driver?routeId=${encodeURIComponent(routeId)}`);
         if (response.ok) {
-            let result = await response.json();
-            students = result.students;
-            renderStudents();
+            const result = await response.json();
+            const driver = result.driver;
+            console.log("Assigned Driver:", driver);
+            renderDriver(driver);
         } else {
-            console.error('Failed to fetch students.');
+            console.error('Failed to fetch assigned driver.');
         }
     } catch (error) {
-        console.error('Error fetching students:', error);
+        console.error('Error fetching assigned driver:', error);
     }
 }
+
+async function fetchStudentRouteId(username) {
+    try {
+        const response = await fetch(`/student/route-id?username=${encodeURIComponent(username)}`);
+        const data = await response.json();
+        console.log("Student's Route ID:", data.routeId);
+        routeId = data.routeId;
+        return
+    } catch (err) {
+        console.error("Failed to get student route ID:", err);
+    }
+}
+
+
+
+function renderDriver(driver) {
+
+    driverList.innerHTML = "";
+
+    if (!driver || !driver.driverId) {
+        driverList.innerHTML = `
+            <div class="chat-item no-driver">
+                <img src="./assets/driver_icon.png" alt="Icon">
+                <div>
+                    <h3 class="name">No Driver Assigned</h3>
+                    <p class="username">---</p>
+                </div>
+            </div>`;
+        return;
+    }
+
+    const template = `
+        <a class="chat-item" id="${driver.username || driver.driverId}" data-role="driver"
+           onclick="initiateChat('${driver.name}', '${driver.username || driver.driverId}', 'driver')">
+            <img src="./assets/driver_icon.png" alt="Icon">
+            <div>
+                <h3 class="name">${driver.name}</h3>
+                <p class="username">${driver.username || driver.driverId}</p>
+                <span class="new-msg" id="${driver.username || driver.driverId}-notify">New Message</span>
+            </div>
+        </a>`;
+
+    driverList.innerHTML = template;
+}
+
 
 function renderAdmins() {
     adminList.innerHTML = "";
     admins.forEach(admin => {
-        let template = `<a class="chat-item" id="${admin.username}" data-role="admin" onclick="initiateChat('${admin.firstName} ${admin.lastName}','${admin.username}','admin')">
+        let template = `<a class="chat-item" id="${admin.username}" data-role="admin" onclick="initiateChat('${admin.firstName} ${admin.lastName}','${admin.username}', 'admin')">
                             <img src="./assets/admin_icon.png" alt="Icon">
                             <div>
                                 <h3 class="name">${admin.firstName} ${admin.lastName}</h3>
@@ -149,21 +209,6 @@ function renderAdmins() {
                             </div>
                         </a>`
         adminList.innerHTML += template;
-    });
-}
-
-function renderStudents() {
-    studentList.innerHTML = "";
-    students.forEach(student => {
-        let template = `<a class="chat-item" id="${student.username}" data-role="student" onclick="initiateChat('${student.firstName} ${student.lastName}','${student.username}', 'student')">
-                            <img src="./assets/student_icon.png" alt="Icon">
-                            <div>
-                                <h3 class="name">${student.firstName} ${student.lastName}</h3>
-                                <p class="username">${student.username}</p>
-                                <span class="new-msg" id="${student.username}-notify">New Message</span>
-                            </div>
-                        </a>`
-        studentList.innerHTML += template;
     });
 }
 

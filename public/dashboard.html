@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Manage Routes</title>
+    <title>Student Routes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <style>
@@ -24,20 +24,25 @@
         }
 
         header {
-            background-color: #2a2a40;
-            padding: 15px 20px;
+            background-color: #000;
+            color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px 20px;
         }
 
-        header h2 {
+        header h1 {
             font-size: 24px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: #fff;
+            margin: 0px !important;
+        }
+
+        header h1 img {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
         }
 
         nav {
@@ -47,13 +52,8 @@
 
         nav a {
             text-decoration: none;
-            color: #fff;
+            color: white;
             font-size: 16px;
-            transition: color 0.3s ease;
-        }
-
-        nav a:hover {
-            color: #007bff;
         }
 
         #map-section {
@@ -226,34 +226,134 @@
             background-color: #6c757d;
             color: #fff;
         }
+        .stops-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 20px;
+        }
+        .stop-tile {
+            width: calc(25% - 20px);
+            background-color: #2a2a40;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .stop-tile h3 {
+            margin: 10px 0;
+            color: #fff;
+        }
+        .assigned-bustop{
+            background-color: #f5b53f;
+            color: #000 !important;
+        }
+        .assigned-bustop h3{
+            color: #000 !important;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border-radius: 5px;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+        }
+
+        th {
+            background: #f5b53f;
+            color: #fff;
+        }
+
+        tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        tr:hover {
+            background: rgba(37, 117, 252, 0.1);
+        }
+        #bus-status {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #bus-status.show {
+            opacity: 1;
+        }
+
     </style>
-    <script src="./scripts/auth.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="./scripts/auth.js"></script>
 </head>
 <body>
     <header>
-        <div class="title"><h2>Admin - School Bus Tracker <span>🚌</span></h2></div>
         <nav>
-            <a href="index.html">Home</a>
-            <a href="#">Routes</a>
-            <a href="drivers.html">Drivers</a>
-            <a href="chats.html">Chats</a>
-            <a href="students.html">Students</a>
-            <a href="attendance.html">Attendance</a>
-            <a href="#" onclick="logout()">Logout</a>
+            <h1>
+                <img src="./assets/busicon.png" alt="School Bus Icon">
+                <a href="dashboard.html" style="color: white; text-decoration: none;"><h1>School Bus Tracker</h1></a>
+            </h1>
+        </nav>
+        <nav>
+            <a href="dashboard.html">Home</a>
+            <a href="chats.html">Chat</a>
+            <a href="about.html">About</a>
+            <a href="profile.html">Profile</a>
+            <a href="contact.html">Contact</a>
+            <a onclick="logout()">Logout</a>
         </nav>
     </header>
     <main>
     <section id="map-section">
         <div id="map"></div>
+        <div id="bus-status" style="
+            margin: 10px auto;
+            max-width: 300px;
+            background-color: #f0f8ff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: none;"> Last updated: <span id="bus-timestamp">--</span>
+        </div>
     </section>
-   
     <div class="container">
-        <h1>Manage Routes</h1>
+        <h1>Assigned Route</h1>
         <div class="route-list" id="route-list">
             
         </div>
     </div>
+
+    <div class="container">
+        <h1>Route Stops</h1>
+        <div class="stops-container" id="stop-list">
+            
+        </div>
+    </div>
+
+     <div class="container">
+        <h2>Stop Information</h2>
+    <table id="stopInfoTable">
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Class</th>
+                <th>Attendance</th>
+                <th>Parent Details</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+     </div>
+    
 
     <div id="view-route-modal" class="modal">
         <div class="modal-content">
@@ -267,31 +367,8 @@
             <div class="modal-footer">
                 <button class="confirm" onclick="closeModal('view-route-modal')">Close</button>
             </div>
-            
         </div>
     </div>
-
-    <section id="edit-controls" style="display:none; margin: 20px;">
-        <div class="container">
-          <h2>Edit Route Info</h2>
-          <label for="bus-reg-number">Bus Reg Number:</label>
-          <input type="text" id="bus-reg-number" placeholder="Enter bus registration number" style="width: 100%; padding: 10px; margin-bottom: 10px;">
-      
-          <label for="pickup-time">Pickup Time:</label>
-          <input type="time" id="pickup-time" style="width: 100%; padding: 10px; margin-bottom: 10px;">
-      
-          <label for="drop-time">Drop Time:</label>
-          <input type="time" id="drop-time" style="width: 100%; padding: 10px; margin-bottom: 10px;">
-      
-          <h3>Bus Stops</h3>
-          <ul id="bus-stops-list" style="list-style: none; padding: 0;"></ul>
-      
-          <button id="save-edited-route" class="action-btn" onclick="saveEditedRoute()">
-            <i class="fas fa-save"></i> Save Changes
-          </button>
-        </div>
-      </section>
-
 </main>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
@@ -307,8 +384,11 @@
         let routeCoordinates = [];
         let stopMarkers = [];
         let stopCoordinates = [];
-        let isEditingRoute = false;
-
+        var drivers = [];
+        var student;
+        var studentAssignedRouteId;
+        var busStop;
+        let notifiedStart = false;
 
         const map = L.map('map').setView([25.5937, 78.9629], 5);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -338,7 +418,7 @@
         });
 
         const busIcon = L.icon({
-            iconUrl: './bus.png',
+            iconUrl: './assets/bus-icon.png',
             iconSize: [30, 30],
             iconAnchor: [15, 15]
         });
@@ -352,61 +432,86 @@
         });
         
         let routes = [];
+
+
+        const username = localStorage.getItem('email');
+        async function fetchProfile() {
+            try {
+                const response = await fetch(`/student/profile?username=${username}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    student = data
+                    busStop = data.busStop;
+                } else {
+                    console.error("Error fetching profile:", data.message);
+                }
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+            }
+        }
+
         
         async function fetchRoutes() {
             try {
-                const response = await axios.get('/admin/getRoutes');
+                const response = await axios.get(`/student/getStudentRoute/${localStorage.getItem('email')}`);
+                console.log(response)
                 if (response.status === 200 && response.data) {
-                    routes = response.data.routes;
-                   // console.log(routes)
+                    routes[0] = response.data.route;
+                    console.log(routes)
                     renderRoutes();
                 }
             } catch (error) {
                 console.error('Error fetching routes:', error);
-                alert('Failed to fetch routes.');
+                alert('Route not assigned. Please contact Administration');
             }
         }
 
-        fetchRoutes();
+        async function fetchStudents() {
+            try {
+                const response = await fetch('/admin/drivers');
+                if (response.ok) {
+                    let result = await response.json();
+                    drivers = result.drivers;
+                   // console.log(drivers)
+                   // renderStudents();
+                } else {
+                    console.error('Failed to fetch drivers.');
+                }
+            } catch (error) {
+                console.error('Error fetching drivers:', error);
+            }
+        }
 
         function renderRoutes() {
             const routeList = document.getElementById('route-list');
             routeList.innerHTML = ''; 
-            console.log(routes)
-            routes.forEach(route => {
+
+            routes.forEach( async (route) => {
+                studentAssignedRouteId = route.routeId
                 const routeCard = document.createElement('div');
                 routeCard.className = 'route-card';
                 routeCard.innerHTML = `
                     <div class="route-info">
-                        <h3>Route ID: ${route.routeId}</h3>
+                        <h3>Route ID: ${studentAssignedRouteId ? studentAssignedRouteId : "Not assigned"} | Stop : ${busStop ? busStop : "Not assigned"}</h3>
                         <p>From: ${route.origin.address} → To: ${route.destination.address}</p>
-                        <p>Bus: ${route.bus.regNumber} | Driver: ${route.driver ? route.driver.name : 'Not assigned'}</p>
+                        <p>Bus: ${route.bus.regNumber} | Driver: ${route.driver.name}</p>
                     </div>
                     <div class="route-actions">
                         <button class="view" onclick="viewRoute('${route.routeId}')">View</button>
-                        <button class="edit" onclick="editRoute('${route.routeId}')">Edit</button>
-                        <button class="delete" onclick="deleteRoute('${route.routeId}')">Delete</button>
                     </div>
                 `;
                 routeList.appendChild(routeCard);
+                await viewRoute(route.routeId);
             });
+
+            socket.emit("subscribeToRoute", { routeId: studentAssignedRouteId });
         }
 
-        async function reverseGeocode(lat, lng) {
-            try {
-                const response = await axios.get(
-                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-                );
-                const address = response.data.display_name;
-                return address;
-            } catch (error) {
-                console.error("Error fetching address:", error);
-                return null;
-            }
-        }
 
         function viewRoute(routeId) {
             const route = routes.find(r => r.routeId === routeId);
+            const stopsContainer = document.getElementById("stop-list");
             if (route) {
                 const routeDetails = document.getElementById('route-details');
                 routeDetails.innerHTML = `
@@ -414,7 +519,7 @@
                     <p><strong>Origin:</strong> ${route.origin.address}</p>
                     <p><strong>Destination:</strong> ${route.destination.address}</p>
                     <p><strong>Bus:</strong> ${route.bus.regNumber}</p>
-                    <p><strong>Driver:</strong> ${route.driver ? route.driver.name : 'Not assigned'}</p>
+                    <p><strong>Driver:</strong> ${route.driver.name}</p>
                     <p><strong>Pickup Time:</strong> ${route.pickupTime}</p>
                     <p><strong>Drop Time:</strong> ${route.dropTime}</p>
                     <p><strong>Stops:</strong></p>
@@ -435,41 +540,31 @@
                     .addTo(map)
                     .bindPopup(`Destination: ${route.destination.address}`)
                     .openPopup();
-
+                stopsContainer.innerHTML = '';
                 route.stops.forEach(stop => {
                     const stopMarker = L.marker([stop.coordinates.lat, stop.coordinates.lng], { icon: busStopIcon })
                         .addTo(map)
                         .bindPopup(`Stop: ${stop.address}`);
                     stopMarkers.push(stopMarker);
                     stopCoordinates.push(L.latLng(stop.coordinates.lat, stop.coordinates.lng));
+
+                    const stopTile = document.createElement("div");
+                    stopTile.className = "stop-tile";
+                    if (stop.stopId === busStop) {
+                        stopTile.classList.add("assigned-bustop");
+                        stopTile.innerHTML = `<h3>${stop.stopId}</h3> <p>Your Stop</p>`;
+                    } else {
+                        stopTile.innerHTML = `<h3>${stop.stopId}</h3>`;
+                    }
+                    
+                   // stopTile.addEventListener("click", () => displayStopInfo(stop.stopId, routeId));
+                    
+                    stopsContainer.appendChild(stopTile);
                 });
 
                 createRouteWithWaypoints(route);
-
-                if (typeof socket !== "undefined") {
-                    socket.emit("subscribeToRoute", { routeId });
-
-                    socket.on("busLocation", (update) => {
-                        updateBusMarker(update);
-                    });
-
-                    socket.on("busStopLocation", (stopUpdate) => {
-                        console.log("New stop update:", stopUpdate);
-                    });
-                }
-
             }
         }
-
-        function updateBusMarker({ lat, lng }) {
-            const latLng = L.latLng(lat, lng);
-            if (busMarker) {
-                busMarker.setLatLng(latLng);
-            } else {
-                busMarker = L.marker(latLng, { icon: busIcon }).addTo(map).bindPopup("🚌 Live Bus Location");
-            }
-        }
-
 
         function clearMarkers() {
             if (originMarker) {
@@ -493,7 +588,6 @@
             stopMarkers = [];
             stopCoordinates = [];
             routeCoordinates = [];
-           // alert('Markers cleared! You can set new origin and destination points.');
         }
 
         function createRouteWithWaypoints(route) {
@@ -527,191 +621,73 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
-        function showEditControls(routeId) {
-            document.getElementById('edit-controls').style.display = 'block';
-            document.getElementById('save-edited-route').dataset.routeId = routeId;
+        document.addEventListener('DOMContentLoaded', async () => {
+            await fetchProfile();
+            await fetchRoutes();
+            await fetchStudents();
+        });
 
-            const route = routes.find(r => r.routeId === routeId);
-            document.getElementById('bus-reg-number').value = route.bus?.regNumber || '';
-            document.getElementById('pickup-time').value = route.pickupTime ? convertTo24HourFormat(route.pickupTime) : '';
-            document.getElementById('drop-time').value = route.dropTime ? convertTo24HourFormat(route.dropTime) : '';
-            updateBusStopsList();
-        }
-
-        function convertTo24HourFormat(timeStr) {
-            const [time, modifier] = timeStr.split(" ");
-            let [hours, minutes] = time.split(":");
-
-            if (modifier === "PM" && hours !== "12") {
-                hours = String(parseInt(hours) + 12);
+        socket.on("busLocation", ({ lat, lng, timestamp }) => {
+            if (!busMarker) {
+                busMarker = L.marker([lat, lng], { icon: busIcon }).addTo(map);
+            } else {
+                busMarker.setLatLng([lat, lng]);
             }
-            if (modifier === "AM" && hours === "12") {
-                hours = "00";
-            }
+            map.setView([lat, lng]);
 
-            return `${hours.padStart(2, '0')}:${minutes}`;
-        }
+            const time = timestamp ? new Date(timestamp) : new Date();
+            const formattedTime = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+            const statusBox = document.getElementById('bus-status');
+            statusBox.style.display = 'block';
+            statusBox.classList.add("show");
 
-        async function updateBusStopsList() {
-            const busStopsList = document.getElementById('bus-stops-list');
-            busStopsList.innerHTML = '';
-            for (let [index, stop] of stopCoordinates.entries()) {
-                let address = await reverseGeocode(stop.lat, stop.lng);
-                const li = document.createElement('li');
-                li.style.backgroundColor = '#eee';
-                li.style.marginBottom = '5px';
-                li.style.padding = '8px';
-                li.style.borderRadius = '8px';
-                li.innerHTML = `
-                <span>Stop ${index + 1}: ${address}</span>
-                <button onclick="removeBusStop(L.latLng(${stop.lat}, ${stop.lng}))" style="margin-left: 10px; background-color: red; color: white; border: none; padding: 5px 10px; border-radius: 4px;">Remove</button>
-                `;
-                busStopsList.appendChild(li);
-            }
-        }
+            document.getElementById('bus-timestamp').innerText = formattedTime;
 
-        function removeBusStop(stop) {
-            const markerIndex = stopMarkers.findIndex(marker => marker.getLatLng().equals(stop));
-            if (markerIndex !== -1) {
-                map.removeLayer(stopMarkers[markerIndex]);
-                stopMarkers.splice(markerIndex, 1);
-            }
-            const coordIndex = stopCoordinates.findIndex(coord => coord.equals(stop));
-            if (coordIndex !== -1) {
-                stopCoordinates.splice(coordIndex, 1);
-            }
-            updateBusStopsList();
-        }
-
-  
-        async function editRoute(routeId) {
-            const route = routes.find(r => r.routeId === routeId);
-            if (!route) return alert("Route not found!");
-
-            clearMarkers();
-
-            originMarker = L.marker([route.origin.coordinates.lat, route.origin.coordinates.lng], { icon: greenIcon })
-                .addTo(map)
-                .bindPopup('Origin')
-                .openPopup();
-
-            destinationMarker = L.marker([route.destination.coordinates.lat, route.destination.coordinates.lng], { icon: redIcon })
-                .addTo(map)
-                .bindPopup('Destination')
-                .openPopup();
-
-            for (const stop of route.stops) {
-                const stopLatLng = L.latLng(stop.coordinates.lat, stop.coordinates.lng);
-                const marker = L.marker(stopLatLng, { icon: busStopIcon })
-                    .addTo(map)
-                    .bindPopup(`Stop: ${stop.address}`);
-                stopMarkers.push(marker);
-                stopCoordinates.push(stopLatLng);
-            }
-
-            map.setView([route.origin.coordinates.lat, route.origin.coordinates.lng], 13);
-            createRouteWithWaypoints(route);
-            isEditingRoute = true;
-            showEditControls(routeId);
-        }
-
-        map.on('click', async (e) => {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
-
-            if (!originMarker || !destinationMarker) return;
-
-            if (isEditingRoute) {
-                const stopMarker = L.marker([lat, lng], { icon: busStopIcon }).addTo(map)
-                    .bindPopup(`Stop ${stopMarkers.length + 1}`).openPopup();
-
-                stopMarkers.push(stopMarker);
-                stopCoordinates.push(L.latLng(lat, lng));
-
-                const stopAddress = await reverseGeocode(lat, lng);
-                if (stopAddress) {
-                    console.log("Stop Address:", stopAddress);
-                    alert(`Stop ${stopMarkers.length} added at: ${stopAddress}`);
-                } else {
-                    alert("Could not fetch stop address.");
+            const origin = routes[0]?.origin?.coordinates;
+            if (origin && !notifiedStart) {
+                const distance = getDistance(lat, lng, origin.lat, origin.lng);
+                if (distance < 100) {
+                    alert("The school bus has started from the origin.");
+                    notifiedStart = true;
                 }
-
-                updateBusStopsList();
             }
         });
 
+        function getDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371e3;
+            const toRad = x => (x * Math.PI) / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLng = toRad(lng2 - lng1);
 
-        async function saveEditedRoute() {
-            isEditingRoute = false;
-            const routeId = document.getElementById('save-edited-route').dataset.routeId;
-            const origin = originMarker.getLatLng();
-            const destination = destinationMarker.getLatLng();
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRad(lat1)) *
+                    Math.cos(toRad(lat2)) *
+                    Math.sin(dLng / 2) *
+                    Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-            const stops = await Promise.all(stopCoordinates.map(async (stop, index) => ({
-                stopId: `S${index + 1}`,
-                coordinates: { lat: stop.lat, lng: stop.lng },
-                address: await reverseGeocode(stop.lat, stop.lng),
-                sequence: index + 1
-            })));
-
-            const routeData = {
-                origin: {
-                coordinates: { lat: origin.lat, lng: origin.lng },
-                address: await reverseGeocode(origin.lat, origin.lng)
-                },
-                destination: {
-                coordinates: { lat: destination.lat, lng: destination.lng },
-                address: await reverseGeocode(destination.lat, destination.lng)
-                },
-                stops: stops,
-                bus: {
-                regNumber: document.getElementById('bus-reg-number').value.trim() || 'UNKNOWN'
-                },
-                pickupTime: document.getElementById('pickup-time').value,
-                dropTime: document.getElementById('drop-time').value
-            };
-
-            try {
-                const response = await axios.put(`/admin/routes/${routeId}`, routeData);
-                if (response.status === 200) {
-                alert('Route updated successfully!');
-                window.location.reload();
-                }
-            } catch (error) {
-                console.error(error);
-                alert('Failed to update route.');
-            }
-            
-            }
-
-
-
-        function deleteRoute(routeId) {
-            if (confirm(`Are you sure you want to delete route ${routeId}?`)) {
-               
-                fetch(`/admin/routes/${routeId}`, {
-                    method: 'DELETE',
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message === 'Route deleted successfully.') {
-                        alert(`Route ${routeId} deleted.`);
-                        window.location.reload(true);
-                    } else {
-                        alert('Failed to delete route.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error deleting route:', error);
-                    alert('Failed to delete route.');
-                });
-            }
+            return R * c;
         }
 
 
 
-        document.addEventListener('DOMContentLoaded', renderRoutes);
+        socket.on("busStopLocation", ({ stopId, nextStopId }) => {
+            if (nextStopId === busStop) {
+                alert("⏰ Your stop is next! Get ready!");
+            }
+
+            if (stopId === busStop) {
+                alert("🚌 The bus has arrived at your stop.");
+            }
+        });
+
+        socket.on("reachedDestination", ({ timestamp }) => {
+            alert("🚌 The bus has reached destination point.")
+        })
+
+
     </script>
 </body>
 </html>

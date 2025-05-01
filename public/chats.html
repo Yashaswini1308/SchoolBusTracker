@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Driver Chat</title>
+    <title>Chat App</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700,300">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
@@ -21,20 +21,24 @@
         }
 
         header {
-            background-color: #2a2a40;
-            padding: 15px 20px;
+            background-color: #000;
+            color: white;
             display: flex;
-            color: #fff;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px 20px;
         }
 
-        header h2 {
+        header h1 {
             font-size: 24px;
             display: flex;
             align-items: center;
-            gap: 10px;
+        }
+
+        header h1 img {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
         }
 
         nav {
@@ -44,13 +48,8 @@
 
         nav a {
             text-decoration: none;
-            color: #fff;
+            color: white;
             font-size: 16px;
-            transition: color 0.3s ease;
-        }
-
-        nav a:hover {
-            color: #007bff;
         }
 
         .main-content {
@@ -114,7 +113,7 @@
             gap: 20px;
         }
 
-        .select-admin, .select-student {
+        .select-driver, .select-admin {
             padding: 10px 20px;
             background: transparent;
             color: #fff;
@@ -126,7 +125,7 @@
             position: relative;
         }
 
-        .select-admin:hover, .select-student:hover {
+        .select-driver:hover, .select-admin:hover {
             transform: scale(1.05);
             color: #f1c40f;
         }
@@ -257,12 +256,19 @@
 </head>
 <body>
     <header>
-        <div class="title"><h2>Driver - School Bus Tracker <span>🚌</span></h2></div>
         <nav>
-            <a href="index.html">Home</a>
-            <a href="#">Chats</a>
-            <a href="attendance.html">Attendance</a>
-            <a href="#" onclick="logout()">Logout</a>
+            <h1>
+                <img src="./assets/busicon.png" alt="School Bus Icon">
+                <a href="dashboard.html" style="color: white; text-decoration: none;"><h1>School Bus Tracker</h1></a>
+            </h1>
+        </nav>
+        <nav>
+            <a href="dashboard.html">Home</a>
+            <a href="chats.html">Chat</a>
+            <a href="about.html">About</a>
+            <a href="profile.html">Profile</a>
+            <a href="contact.html">Contact</a>
+            <a onclick="logout()">Logout</a>
         </nav>
     </header>
     <div class="container">
@@ -270,62 +276,20 @@
             <div class="chatlist">
                 <div class="chat-header">Chats</div>
                 <div class="chat-selection">
-                    <button class="select-admin active-select" onclick="displayAdmin()">Admins</button>
-                    <button class="select-student" onclick="displayStudent()">Students</button>
+                    <button class="select-driver active-select" onclick="displayDriver()">Driver</button>
+                    <button class="select-admin" onclick="displayAdmin()">Admin</button>
                 </div>
                 <div class="chat-lists" id="chatList">
-                    <div id="adminList">
-                        <a class="chat-item">
-                            <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="">
+                    <div id="driverList">
+                        <div class="chat-item no-driver">
+                            <img src="./assets/driver_icon.png" alt="Icon">
                             <div>
-                                <h3>John Doe</h3>
-                                <p>Online</p>
+                                <h3 class="name">No Route Assigned</h3>
+                                <p class="username">---</p>
                             </div>
-                        </a>
-                        <a class="chat-item">
-                            <img src="https://randomuser.me/api/portraits/women/2.jpg" alt="">
-                            <div>
-                                <h3>Jane Smith</h3>
-                                <p>Typing...</p>
-                            </div>
-                        </a>
-                        <a class="chat-item">
-                            <img src="https://randomuser.me/api/portraits/men/3.jpg" alt="">
-                            <div>
-                                <h3>Michael Brown</h3>
-                                <p>Last seen 10m ago</p>
-                            </div>
-                        </a>
-                        <a class="chat-item">
-                            <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="">
-                            <div>
-                                <h3>John Doe</h3>
-                                <p>Online</p>
-                            </div>
-                        </a>
-                        <a class="chat-item">
-                            <img src="https://randomuser.me/api/portraits/women/2.jpg" alt="">
-                            <div>
-                                <h3>Jane Smith</h3>
-                                <p>Typing...</p>
-                            </div>
-                        </a>
-                        <a class="chat-item">
-                            <img src="https://randomuser.me/api/portraits/men/3.jpg" alt="">
-                            <div>
-                                <h3>Michael Brown</h3>
-                                <p>Last seen 10m ago</p>
-                            </div>
-                        </a>
-                        <a class="chat-item">
-                            <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="">
-                            <div>
-                                <h3>John Doe</h3>
-                                <p>Online</p>
-                            </div>
-                        </a>
+                        </div>
                     </div>
-                    <diV id="studentList" style="display: none;">
+                    <diV id="adminList" style="display: none;">
                         <a class="chat-item">
                             <img src="https://randomuser.me/api/portraits/women/2.jpg" alt="">
                             <div>
